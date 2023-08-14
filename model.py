@@ -11,5 +11,5 @@ class MatrixFactorization(nn.Module):
     def forward(self, user_idx, movie_idx):
         user_emb = self.user_embedding(user_idx)
         movie_emb = self.movie_embedding(movie_idx)
-        rating = torch.sum(user_emb * item_emb, dim=1)
+        rating = torch.sum(user_emb * movie_emb, dim=1)
         return rating
