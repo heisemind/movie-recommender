@@ -7,7 +7,6 @@ This is a simple movie recommender system built using matrix factorization. The 
 - Description
 - Installation
 - Usage
-- Contributing
 - License
 - Check Out Heise Mind
 
