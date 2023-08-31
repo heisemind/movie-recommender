@@ -1,11 +1,11 @@
+from torch.utils.data import DataLoader, random_split
+from torch import nn, optim
 from tqdm import tqdm
 import numpy as np
 import torch
-from torch import nn, optim
-from torch.utils.data import DataLoader, random_split
-from data import MovieLens
 from model import MatrixFactorization
 from utils import save_model
+from data import MovieLens
 
 # Training configuration
 BATCH_SIZE = 4096
@@ -14,9 +14,10 @@ EMBEDDING_SIZE = 200
 LEARNING_RATE = 1e-4
 NUM_EPOCHS = 30
 
-# Dataset-related configs
+# Load the MovieLens dataset
 movielens = MovieLens()
 
+# Split dataset into train and validation sets
 val_ratio = 0.2
 train_ratio = 1.0 - val_ratio
 
@@ -25,22 +26,23 @@ train_length = int(train_ratio * total_length)
 val_length = int(val_ratio * total_length)
 
 train_dataset, val_dataset = random_split(
-        movielens, [train_length, val_length],
-        generator=torch.Generator().manual_seed(23))
+    movielens, [train_length, val_length],
+    generator=torch.Generator().manual_seed(23))
 
-# Creating DataLoaders
+# Create DataLoaders for training and validation
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
 
-# Creating MatrixFactorization model
+# Create the MatrixFactorization model
 num_users, num_movies = movielens.size
 model = MatrixFactorization(num_users, num_movies, EMBEDDING_SIZE).to(DEVICE)
 
+# Loss and optimizer
 criterion = nn.MSELoss().to(DEVICE)
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 min_val_loss = np.inf
 
-# Epochs
+# Training loop
 for epoch in range(NUM_EPOCHS):
     print(f'Epoch {epoch + 1}')
     running_loss = 0.0
@@ -66,7 +68,7 @@ for epoch in range(NUM_EPOCHS):
         optimizer.step()
 
         running_loss += loss.item()
-        train_loop.set_postfix(loss=running_loss/(i+1))
+        train_loop.set_postfix(loss=running_loss / (i + 1))
 
     running_loss = running_loss / len(train_loader)
     print(f'Train Loss: {running_loss}')
@@ -87,18 +89,13 @@ for epoch in range(NUM_EPOCHS):
             loss = criterion(outputs, ratings)
 
             val_loss += loss.item()
-    
+
     val_loss = val_loss / len(val_loader)
     print(f'Validation Loss: {val_loss}')
 
+    # Save the model if validation loss decreases
     if val_loss < min_val_loss:
         save_model(model, 'recommender_model.pth')
         min_val_loss = val_loss
 
 print('Finished Training')
-
-
-
-
-
-
